@@ -90,9 +90,16 @@ const Agent = ({
     const handleGenerateFeedback = async (messages: SavedMessage[]) => {
       console.log("handleGenerateFeedback");
 
+      // Check if required data is available
+      if (!interviewId || !userId) {
+        console.warn("Missing interviewId or userId for feedback generation");
+        router.push("/");
+        return;
+      }
+
       const { success, feedbackId: id } = await createFeedback({
-        interviewId: interviewId!,
-        userId: userId!,
+        interviewId,
+        userId,
         transcript: messages,
         feedbackId,
       });
@@ -118,12 +125,25 @@ const Agent = ({
     setCallStatus(CallStatus.CONNECTING);
 
     if (type === "generate") {
-      await vapi.start(process.env.NEXT_PUBLIC_VAPI_WORKFLOW_ID!, {
-        variableValues: {
-          username: userName,
-          userid: userId,
-        },
-      });
+      // Check if workflow ID is defined
+      const workflowId = process.env.NEXT_PUBLIC_VAPI_WORKFLOW_ID;
+      if (!workflowId) {
+        console.error("Missing VAPI workflow ID");
+        setCallStatus(CallStatus.INACTIVE);
+        return;
+      }
+
+      try {
+        await vapi.start(workflowId, {
+          variableValues: {
+            username: userName || "Guest",
+            userid: userId || "anonymous",
+          },
+        });
+      } catch (error) {
+        console.error("Error starting VAPI call:", error);
+        setCallStatus(CallStatus.INACTIVE);
+      }
     } else {
       let formattedQuestions = "";
       if (questions) {
@@ -132,11 +152,16 @@ const Agent = ({
           .join("\n");
       }
 
-      await vapi.start(interviewer, {
-        variableValues: {
-          questions: formattedQuestions,
-        },
-      });
+      try {
+        await vapi.start(interviewer, {
+          variableValues: {
+            questions: formattedQuestions,
+          },
+        });
+      } catch (error) {
+        console.error("Error starting interview call:", error);
+        setCallStatus(CallStatus.INACTIVE);
+      }
     }
   };
 

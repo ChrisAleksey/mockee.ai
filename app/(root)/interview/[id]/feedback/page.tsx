@@ -14,13 +14,24 @@ const Feedback = async ({ params }: RouteParams) => {
   const { id } = await params;
   const user = await getCurrentUser();
 
+  // Ensure we have a user (double-check authentication)
+  if (!user || !user.id) {
+    // This should not normally happen due to the layout's auth check,
+    // but we're adding it as an additional safeguard
+    redirect("/sign-in");
+  }
+
   const interview = await getInterviewById(id);
   if (!interview) redirect("/");
 
+  // Now we know user.id is defined, so we can safely use it
   const feedback = await getFeedbackByInterviewId({
     interviewId: id,
-    userId: user?.id!,
+    userId: user.id,
   });
+
+  // If no feedback is found, redirect to interview page
+  if (!feedback) redirect(`/interview/${id}`);
 
   return (
     <section className="section-feedback">

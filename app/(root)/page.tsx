@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
+import { redirect } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import InterviewCard from "@/components/InterviewCard";
@@ -13,13 +14,23 @@ import {
 async function Home() {
   const user = await getCurrentUser();
 
+  // Ensure we have a user (double-check authentication)
+  if (!user || !user.id) {
+    // This should not normally happen due to the layout's auth check,
+    // but we're adding it as an additional safeguard
+    redirect("/sign-in");
+  }
+
+  // Now we know user.id is defined, so we can use it safely
+  // Using ! because we've already checked user is not null above
   const [userInterviews, allInterview] = await Promise.all([
-    getInterviewsByUserId(user?.id!),
-    getLatestInterviews({ userId: user?.id! }),
+    getInterviewsByUserId(user!.id),
+    getLatestInterviews({ userId: user!.id }),
   ]);
 
-  const hasPastInterviews = userInterviews?.length! > 0;
-  const hasUpcomingInterviews = allInterview?.length! > 0;
+  // Safe length checking without non-null assertions
+  const hasPastInterviews = userInterviews && userInterviews.length > 0;
+  const hasUpcomingInterviews = allInterview && allInterview.length > 0;
 
   return (
     <>

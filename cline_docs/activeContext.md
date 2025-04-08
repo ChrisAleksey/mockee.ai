@@ -6,6 +6,8 @@
 - Required dependencies (`yt-dlp`, `bun`) were installed.
 - Server cloned, built, and added to `cline_mcp_settings.json`.
 - Completed test task for environment variable configuration and reverted back to original state.
+- Added all BRCT framework files and updated dependencies to GitHub repository.
+- Successfully committed and pushed changes to the main branch.
 
 **Next Steps:**
 

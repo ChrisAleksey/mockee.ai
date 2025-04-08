@@ -16,12 +16,20 @@ const InterviewDetails = async ({ params }: RouteParams) => {
 
   const user = await getCurrentUser();
 
+  // Ensure we have a user (double-check authentication)
+  if (!user || !user.id) {
+    // This should not normally happen due to the layout's auth check,
+    // but we're adding it as an additional safeguard
+    redirect("/sign-in");
+  }
+
   const interview = await getInterviewById(id);
   if (!interview) redirect("/");
 
+  // Now we know user.id is defined, so we can safely use it
   const feedback = await getFeedbackByInterviewId({
     interviewId: id,
-    userId: user?.id!,
+    userId: user.id,
   });
 
   return (
@@ -48,8 +56,8 @@ const InterviewDetails = async ({ params }: RouteParams) => {
       </div>
 
       <Agent
-        userName={user?.name!}
-        userId={user?.id}
+        userName={user.name || "Guest"}
+        userId={user.id}
         interviewId={id}
         type="interview"
         questions={interview.questions}
